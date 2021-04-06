@@ -10,6 +10,7 @@ def checkout(request):
 
 class HomeView(generic.ListView):
     model = Item
+    paginate_by = 10
     template_name = "home-page.html"
     context_object_name = "items"
 

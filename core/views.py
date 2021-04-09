@@ -3,13 +3,52 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, get_object_or_404
-from .models import Item, Order, OrderItem
+from .models import Item, Order, OrderItem, BillingAddress
 from django.views import generic
+from .forms import CheckOutForm
 from django.shortcuts import redirect
 from django.utils import timezone
 
-def checkout(request):
-    return render(request, "checkout-page.html")
+class CheckoutView(generic.View):
+    def get(self, *args, **kwargs):
+        form = CheckOutForm()
+        context = {
+            'form':form
+        }
+        return render(self.request, "checkout-page.html",context=context)
+
+    def post(self, *args, **kwargs):
+        form = CheckOutForm(self.request.POST or None)
+        try:
+            order = Order.objects.get(user = self.request.user, ordered=False)
+            if form.is_valid():
+                street_name = form.cleaned_data.get('street_name')
+                building_number = form.cleaned_data.get('building_number')
+                country = form.cleaned_data.get('country')
+                zip = form.cleaned_data.get('zip')
+                same_shipping_address = form.cleaned_data.get('same_shipping_address')
+                save_information = form.cleaned_data.get('save_information')
+                payment_option = form.cleaned_data.get('payment_option')
+                billing_address = BillingAddress(
+                    user = self.request.user,
+                    street_name = street_name,
+                    building_number= building_number,
+                    country= country,
+                    zip= zip
+                ) 
+                billing_address.save()
+                order.billing_address = billing_address
+                order.save()
+                return redirect("core:check-out")
+            messages.warning(self.request, "Checkout Failed")
+            return redirect("core:check-out")
+        except ObjectDoesNotExist:
+            messages.error(self.request, "You ddon't have an active order")
+            return redirect("core:home-page")
+
+            
+            messages.warning(self.request,"check")
+            return redirect("core:check-out")
 
 class HomeView(generic.ListView):
     model = Item
@@ -25,13 +64,14 @@ class OrderSummaryView(LoginRequiredMixin, generic.View):
     def get(self,*args, **kwargs):
         try:
             order = Order.objects.get(user = self.request.user, ordered=False)
-            context = {
+            context = {                                 
                 'object':order
-            }
+            }   
             return render(self.request, 'order-summary.html',context=context)
         except ObjectDoesNotExist:
             messages.error(self.request, "You ddon't have an active order")
             return redirect("/")
+
 @login_required
 def add_to_cart(request, slug):
     item = get_object_or_404(Item, slug = slug)
@@ -52,6 +92,7 @@ def add_to_cart(request, slug):
         order.items.add(order_item)
         messages.info(request, "Item was added to your Cart")
     return redirect("core:order-summary")
+
 @login_required
 def remove_from_cart(request, slug):
     item = get_object_or_404(Item, slug = slug)

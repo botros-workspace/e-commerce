@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<main>
+    <div class="container">
+        <div class="table-responsive text-nowrap"> 
+            <h2 class= "mt-5"> Order Summary</h2>
+            <table class=" table">
+                <thead>
+                    <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Item title</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Total Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for order_item in object.items.all %} 
+                    <tr>
+                    <th scope="row">{{forloop.counter}}</th>
+                    <td class = "hover-text-danger "><a  href = "{% url 'core:product' order_item.item.slug %}">{{order_item.item.title}}</a></td>
+                    <td>{{order_item.item.price}}</td>
+                    <td>
+                    <a href ="{{order_item.item.get_reduce_quantity_of_item_url}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash" viewBox="0 0 16 16">
+                        <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/>
+                    </svg>
+                    </a>
+                    {{order_item.quantity}}
+                    <a href = "{{order_item.item.get_add_to_cart_url}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                    </svg>
+                    </a>
+                    </td>
+                    <td>
+                    {% if order_item.item.discount_price %}
+                        ${{order_item.get_total_discount_item_price}}
+                        <span class="badge bg-danger ml-3 p-1">- {{order_item.get_amount_saved}}$</span>
+                    {% else %}
+                        ${{order_item.get_total_item_price}}
+                    {% endif %}
+                    <td>
+                        <a href = "{{order_item.item.get_remove_from_cart_url}}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" class="bi bi-trash-fill" viewBox="0 0 16 16">
+                            <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z"/>
+                            </svg>
+                        </a>
+                    </td>
+                    </td>
+                    </tr>
+                    {%empty%}
+                    <tr>
+                        <td colspan ="6">Your Cart is Empty</td>
+                    </tr>
+                    <div>
+                    <tr  >
+                        <td colspan ="6"  ><a  class = " btn btn-primary float-right"href ="{% url 'core:home-page' %}"><b>Continue shopping</b></h5></td>
+                    </tr> 
+                    </div> 
+                {% endfor %}
+                </tbody>
+                </div>
+            </table>
+            {% if object.get_total_price %}
+            <div class="table-responsive text-nowrap"> 
+                <table class=" table">
+                    <tbody>
+                        <tr>
+                            <td colspan ="6"><h5><b>Order Total</b></h5></td>
+                            <td colspan ="6"><b>${{object.get_total_price}}</b></td>
+                        </tr>
+                        <tr>
+                            <td colspan ="6"class = "btn btn-warning float-right"><a href ="{% url 'core:check-out' %}"><b>Procced to Checkout</b></h5></td>
+                            <td colspan ="6"class = "btn btn-default float-right"><a href ="{% url 'core:home-page' %}"><b>Continue shopping</b></h5></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>  
+            {% endif %}
+    </div>
+  </main>
+
+{% endblock content %}
